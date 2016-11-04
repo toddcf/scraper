@@ -46,19 +46,18 @@ app.get('/scrape', function(req, res) {
 	request('https://erowid.org/experiences/subs/exp_Ketamine.shtml', function(error, response, html) {
 		// Load this into Cheerio and save it to $ for a shorthand selector:
 		var $ = cheerio.load(html);
-		// Grab every h2 within an article tag, and do the following:
-		$('article h2').each(function(i, element) {
+		// Grab everything with a "table data" tag:
+		$('td').each(function(i, element) {
 			// Save an empty result object:
 			var result = {};
 			// add the text and href of every link,
 			// and save them as properties of the result obj
 			result.title = $(this).children('a').text();
 			result.link = $(this).children('a').attr('href');
-			// using our Article model, create a new entry.
-			// Notice the (result):
-			// This effectively passes the result object to the entry (and the title and link)
+			// Create a new entry using the Article model:
+			// The (result) effectively passes the result object to the entry (and the title and link):
 			var entry = new Article (result);
-			// now, save that entry to the db
+			// Save that entry to the db
 			entry.save(function(err, doc) {
 				// log any errors
 				if (err) {
