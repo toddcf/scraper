@@ -1,10 +1,11 @@
 // DEPENDENCIES
-var body-parser	= require('body-parser');
+var bodyParser	= require('body-parser');
 var cheerio		= require('cheerio');
 var express		= require('express');
 var mongoose	= require('mongoose');
 var logger		= require('morgan');
 var request		= require('request');
+var exphbs		= require('express-handlebars');
 var app			= express();
 
 // Morgan and Body-Parser:
@@ -43,17 +44,17 @@ app.get('/', function(req, res) {
 // A GET request to scrape the NYT website.
 app.get('/scrape', function(req, res) {
 	// Grab the body of the HTML:
-	request('https://erowid.org/experiences/subs/exp_Ketamine.shtml', function(error, response, html) {
+	request('www.nytimes.com', function(error, response, html) {
 		// Load this into Cheerio and save it to $ for a shorthand selector:
 		var $ = cheerio.load(html);
-		// Grab everything with a "table data" tag:
-		$('td').each(function(i, element) {
+		// Grab everything with an "H2 class=story-heading" tag:
+		$('story-heading H2').each(function(i, element) {
 			// Save an empty result object:
 			var result = {};
 			// Add the text and href of every link
 			// and save them as properties of the result object:
-			result.title = $(this).find('a').text();
-			result.link = $(this).find('a').attr('href');
+			result.title = $(this).find('').text();
+			result.link = $(this).find('').attr('href');
 			// Create a new entry using the Article model:
 			// The (result) effectively passes the result object to the entry (and the title and link):
 			var entry = new Article (result);
@@ -74,35 +75,35 @@ app.get('/scrape', function(req, res) {
 	res.send("Scrape Complete");
 });
 
-// this will get the articles we scraped from the mongoDB
+// This will get the articles we scraped from the mongoDB
 app.get('/articles', function(req, res){
-	// grab every doc in the Articles array
+	// Grab every doc in the Articles array:
 	Article.find({}, function(err, doc){
-		// log any errors
+		// Log any errors:
 		if (err){
 			console.log(err);
 		}
-		// or send the doc to the browser as a json object
+		// Or send the doc to the browser as a json object:
 		else {
 			res.json(doc);
 		}
 	});
 });
 
-// grab an article by it's ObjectId
+// Grab an article by its ObjectId:
 app.get('/articles/:id', function(req, res){
-	// using the id passed in the id parameter,
+	// Using the id passed in the id parameter,
 	// prepare a query that finds the matching one in our db...
 	Article.findOne({'_id': req.params.id})
 	// and populate all of the notes associated with it.
 	.populate('note')
-	// now, execute our query
+	// Now, execute our query:
 	.exec(function(err, doc){
-		// log any errors
+		// Log any errors:
 		if (err){
 			console.log(err);
 		}
-		// otherwise, send the doc to the browser as a json object
+		// Otherwise, send the doc to the browser as a JSON object:
 		else {
 			res.json(doc);
 		}
@@ -110,31 +111,31 @@ app.get('/articles/:id', function(req, res){
 });
 
 
-// replace the existing note of an article with a new one
-// or if no note exists for an article, make the posted note it's note.
+// Replace the existing note of an article with a new one.
+// Or, if no note exists for an article, make the posted note its note.
 app.post('/articles/:id', function(req, res){
-	// create a new note and pass the req.body to the entry.
+	// Create a new note and pass the req.body to the entry.
 	var newNote = new Note(req.body);
 
-	// and save the new note the db
+	// Save the new note the db
 	newNote.save(function(err, doc){
-		// log any errors
+		// Log any errors:
 		if(err){
 			console.log(err);
 		}
-		// otherwise
+		// Otherwise...
 		else {
-			// using the Article id passed in the id parameter of our url,
+			// Using the Article ID passed in the id parameter of our url,
 			// prepare a query that finds the matching Article in our db
-			// and update it to make it's lone note the one we just saved
+			// and update it to make its lone note the one we just saved.
 			Article.findOneAndUpdate({'_id': req.params.id}, {'note':doc._id})
-			// execute the above query
+			// Execute the above query:
 			.exec(function(err, doc){
-				// log any errors
+				// Log any errors:
 				if (err){
 					console.log(err);
 				} else {
-					// or send the document to the browser
+					// Or send the document to the browser:
 					res.send(doc);
 				}
 			});
