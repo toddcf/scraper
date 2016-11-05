@@ -50,20 +50,20 @@ app.get('/scrape', function(req, res) {
 		$('td').each(function(i, element) {
 			// Save an empty result object:
 			var result = {};
-			// add the text and href of every link,
-			// and save them as properties of the result obj
-			result.title = $(this).children('a').text();
-			result.link = $(this).children('a').attr('href');
+			// Add the text and href of every link
+			// and save them as properties of the result object:
+			result.title = $(this).find('a').text();
+			result.link = $(this).find('a').attr('href');
 			// Create a new entry using the Article model:
 			// The (result) effectively passes the result object to the entry (and the title and link):
 			var entry = new Article (result);
 			// Save that entry to the db
 			entry.save(function(err, doc) {
-				// log any errors
+				// Log any errors
 				if (err) {
 					console.log(err);
 				}
-				// or log the doc
+				// Or log the doc
 				else {
 					console.log(doc);
 				}
